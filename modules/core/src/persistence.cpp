@@ -1383,17 +1383,17 @@ static char* icvYMLParseBase64(CvFileStorage* fs, char* ptr, int indent, CvFileN
         beg = end;
         icvYMLGetMultilineStringContent( fs, beg, indent, beg, end );
     }
-    if ( !base64::base64_valid(&base64_buffer.front(), 0U, base64_buffer.size()) )
+    if ( !base64::base64_valid(base64_buffer.data(), 0U, base64_buffer.size()) )
         CV_PARSE_ERROR( "Invalid Base64 data." );
 
     /* buffer for decoded data(exclude header) */
     std::vector<uchar> binary_buffer( base64::base64_decode_buffer_size(base64_buffer.size()) );
     int total_byte_size = static_cast<int>(
-        base64::base64_decode_buffer_size( base64_buffer.size(), &base64_buffer.front(), false )
+        base64::base64_decode_buffer_size( base64_buffer.size(), base64_buffer.data(), false )
         );
     {
         base64::Base64ContextParser parser(&binary_buffer.front(), binary_buffer.size() );
-        const uchar * buffer_beg = reinterpret_cast<const uchar *>( &base64_buffer.front() );
+        const uchar * buffer_beg = reinterpret_cast<const uchar *>( base64_buffer.data() );
         const uchar * buffer_end = buffer_beg + base64_buffer.size();
         parser.read( buffer_beg, buffer_end );
         parser.flush();
@@ -2342,17 +2342,17 @@ static char* icvXMLParseBase64(CvFileStorage* fs, char* ptr, CvFileNode * node)
         beg = end;
         icvXMLGetMultilineStringContent( fs, beg, beg, end );
     }
-    if ( !base64::base64_valid(&base64_buffer.front(), 0U, base64_buffer.size()) )
+    if ( !base64::base64_valid(base64_buffer.data(), 0U, base64_buffer.size()) )
         CV_PARSE_ERROR( "Invalid Base64 data." );
 
     /* alloc buffer for all decoded data(include header) */
     std::vector<uchar> binary_buffer( base64::base64_decode_buffer_size(base64_buffer.size()) );
     int total_byte_size = static_cast<int>(
-        base64::base64_decode_buffer_size( base64_buffer.size(), &base64_buffer.front(), false )
+        base64::base64_decode_buffer_size( base64_buffer.size(), base64_buffer.data(), false )
         );
     {
         base64::Base64ContextParser parser(&binary_buffer.front(), binary_buffer.size() );
-        const uchar * buffer_beg = reinterpret_cast<const uchar *>( &base64_buffer.front() );
+        const uchar * buffer_beg = reinterpret_cast<const uchar *>( base64_buffer.data() );
         const uchar * buffer_end = buffer_beg + base64_buffer.size();
         parser.read( buffer_beg, buffer_end );
         parser.flush();
@@ -3457,7 +3457,7 @@ static char* icvJSONParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node )
 
             if ( base64_buffer.size() >= base64::ENCODED_HEADER_SIZE )
             {
-                const char * base64_beg = &base64_buffer.front();
+                const char * base64_beg = base64_buffer.data();
                 const char * base64_end = base64_beg + base64_buffer.size();
 
                 /* get dt from header */
@@ -8230,7 +8230,7 @@ void base64::Base64Writer::check_dt(const char* dt)
 
         /* output header */
         std::string buffer = make_base64_header(dt);
-        const uchar * beg = reinterpret_cast<const uchar *>(&buffer.front());
+        const uchar * beg = reinterpret_cast<const uchar *>(buffer.data());
         const uchar * end = beg + buffer.size();
 
         emitter->write(beg, end);
